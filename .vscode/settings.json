@@ -31,7 +31,7 @@
 "angular.log": "normal",
 "terminal.explorerKind": "external",
 "terminal.integrated.shellIntegration.enabled": false,
-"C_Cpp.default.compilerPath": "${execPath}/../../../PortableGit/msys64/ucrt64/bin/g++.exe",
+"C_Cpp.default.compilerPath": "${workspaceFolder}/../../msys64/ucrt64/bin/g++.exe",
 "terminal.integrated.defaultProfile.windows": "MSYS2",
 "json.schemas": [
 ],
@@ -78,6 +78,5 @@
  },
  "scm.alwaysShowRepositories": true,
  "scm.alwaysShowActions": true,
-"git.path": "${workspaceFolder}/../../../PortableGit/bin/git.exe",
 "C_Cpp.errorSquiggles": "disabled"
 }
