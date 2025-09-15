@@ -33,11 +33,11 @@ This project uses a `Makefile` for easy compilation. You will need a C++ compile
     ```bash
     make
     ```
-4.  The final executable, `asm80`, will be created in the `build/` directory.
+4.  The final executable, `ay-m80`, will be created in the `build/` directory.
 
 ## How to Use
 ```bash
-./build/asm80 <sourcefile.asm> -o <outputfile.com> [-s]
+./build/ay-m80 <sourcefile.asm> -o <outputfile.com> [-s]
  <sourcefile.asm>: The input assembly language file.
 -o <outputfile.com>: (Optional) The name of the output machine code file.
  -s: (Optional) Save the symbol table to a .sym file.
