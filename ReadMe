@@ -38,3 +38,6 @@ This project uses a `Makefile` for easy compilation. You will need a C++ compile
 ## How to Use
 ```bash
 ./build/asm80 <sourcefile.asm> -o <outputfile.com> [-s]
+ <sourcefile.asm>: The input assembly language file.
+-o <outputfile.com>: (Optional) The name of the output machine code file.
+ -s: (Optional) Save the symbol table to a .sym file.
