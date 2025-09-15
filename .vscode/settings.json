@@ -1,0 +1,83 @@
+{
+"C_Cpp.default.cppStandard": "c++17",
+"C_Cpp.default.cStandard": "c17",
+"C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+"terminal.integrated.cursorBlinking": true,
+"terminal.integrated.profiles.windows": {
+  "MSYS2": {
+  "path": "U:\\msys64\\usr\\bin\\bash.exe",
+  "args": ["--login", "-i"],
+  "env": {
+    "MSYSTEM": "UCRT64",
+    "CHERE_INVOKING": "1"
+  },
+  "icon": "terminal-bash"
+},
+"Git Bash": {
+  "path": "${execPath}/../../PortableGit/bin/bash.exe",
+  "args": [
+    "--login",
+    "-i",
+    "-c",
+    "source ${execPath}/../../PortableGit/set_path.sh && exec bash"
+  ],
+  "icon": "terminal-bash"
+}
+},
+"workbench.startupEditor": "none",
+"redhat.telemetry.enabled": false,
+"angular.trace.server": "messages",
+ "angular.view-engine": true,
+"angular.log": "normal",
+"terminal.explorerKind": "external",
+"terminal.integrated.shellIntegration.enabled": false,
+"C_Cpp.default.compilerPath": "${execPath}/../../../PortableGit/msys64/ucrt64/bin/g++.exe",
+"terminal.integrated.defaultProfile.windows": "MSYS2",
+"json.schemas": [
+],
+"editor.tokenColorCustomizations": {
+"textMateRules": [
+{
+"scope": [
+"keyword.other.unit.hexadecimal.cpp",
+"constant.numeric.hexadecimal.cpp",
+"constant.numeric.decimal.cpp"
+],
+"settings": {
+"foreground": "#e29349",
+"fontStyle": "bold"
+}
+},
+{
+"scope": [
+"string.quoted.double.cpp"
+],
+"settings": {
+"foreground": "#27aa83",
+"fontStyle": "bold"
+}
+},
+{
+ "scope": [
+ "entity.name.type.cpp"
+],
+ "settings": {
+ "foreground": "#adadad",
+ "fontStyle": "bold"
+ }
+ },{
+ "scope": [
+ "variable.parameter.cpp"
+],
+ "settings": {
+ "foreground": "#5670e0",
+ "fontStyle": "bold"
+ }
+},
+ ]
+ },
+ "scm.alwaysShowRepositories": true,
+ "scm.alwaysShowActions": true,
+"git.path": "${workspaceFolder}/../../../PortableGit/bin/git.exe",
+"C_Cpp.errorSquiggles": "disabled"
+}

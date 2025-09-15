@@ -1,0 +1,40 @@
+# M80-Compatible 8085 Cross-Assembler
+
+## Author
+* **Andy Young (AceSpify)**
+
+## Description
+
+This is an advanced, two-pass cross-assembler for the Intel 8080 and 8085 microprocessors, written in C++. It was originally converted from a Python script and has been significantly upgraded to support the advanced syntax of assemblers like Microsoft's M80.
+
+The goal of this project was to create an assembler capable of compiling complex, real-world diagnostic programs, such as the `zexall` Z80 exerciser and the Microcosm Associates 8080/8085 CPU Diagnostic.
+
+### Features
+* Supports the full Intel 8080 and 8085 instruction sets.
+* **Two-Pass Design**: Correctly resolves forward references to labels.
+* **Advanced Expression Parser**: Evaluates complex mathematical and logical expressions (`+`, `-`, `*`, `/`, `AND`, `OR`, `XOR`) with support for operator precedence and parentheses.
+* **Macro Engine**: Full support for `MACRO`/`ENDM` definitions and expansion, including parameters and `LOCAL` labels.
+* **Conditional Assembly**: Handles `IF`/`ENDIF` blocks to conditionally include or exclude code.
+* **M80-Compatible Syntax**: Parses common M80 directives and syntax, including:
+    * `EQU` directives without colons.
+    * `DB`, `DW`, and `DS` with multiple arguments and expressions.
+    * Unary operators like `LOW` and `HIGH`.
+    * The `$` symbol for the current location counter.
+
+## How to Build
+This project uses a `Makefile` for easy compilation. You will need a C++ compiler like `g++` and the `make` utility.
+
+1.  Navigate to the project's root directory.
+2.  Run the clean command to remove any old builds:
+    ```bash
+    make clean
+    ```
+3.  Run the build command:
+    ```bash
+    make
+    ```
+4.  The final executable, `asm80`, will be created in the `build/` directory.
+
+## How to Use
+```bash
+./build/asm80 <sourcefile.asm> -o <outputfile.com> [-s]
