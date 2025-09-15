@@ -2,7 +2,7 @@
 
 # --- Variables ---
 # The final executable will be placed in the build/ directory.
-TARGET := build/asm80
+TARGET := build/ay-m80
 
 # The C++ compiler and its flags. -pthread has been removed as it's not needed.
 CXX      := g++
