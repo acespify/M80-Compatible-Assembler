@@ -1,59 +1,68 @@
-# Makefile for the 8080 Cross-Assembler
+# Makefile for the ayM80 Cross-Assembler
 
 # --- Variables ---
-# The final executable will be placed in the build/ directory.
-TARGET := build/ay-m80
-
-# The C++ compiler and its flags. -pthread has been removed as it's not needed.
 CXX      := g++
-CXXFLAGS := -std=c++17 -g -Wall -Wextra
+SRCDIR   := src
+SOURCES  := $(wildcard $(SRCDIR)/*.cpp)
 
-# The directory where intermediate object files will be stored.
-BUILD_DIR := build/obj
+# Base compiler flags used for all builds
+BASE_CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude
 
-# --- Source Files ---
-# Explicitly list the application's C++ source files.
-APP_SRCS := \
-    src/main.cpp \
-    src/Assembler.cpp
+# --- Build Configurations ---
+# Flags for a "debug" build: adds debug symbols (-g) and enables our debug macro
+DEBUG_FLAGS   := -g -DDEBUG_MODE
+# Flags for a "release" build: adds optimizations (-O2)
+RELEASE_FLAGS := -O2
 
-# The full list of source files to be compiled.
-SRCS := $(APP_SRCS)
+# --- Default Target ---
+# The default 'all' target will create a release build.
+.PHONY: all
+all: release
 
-# Automatically generate the list of object file paths, preserving the
-# directory structure inside the BUILD_DIR.
-# e.g., src/main.cpp becomes build/obj/src/main.o
-OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SRCS))
+# --- Build Rules ---
 
+# Rule to create a release build in the build/release/ directory
+.PHONY: release
+release:
+	$(MAKE) build_target \
+	BUILD_DIR_NAME=release \
+	CXXFLAGS="$(BASE_CXXFLAGS) $(RELEASE_FLAGS)"
 
-# --- Includes ---
-# Add the path to our header files.
-INCLUDES := -Iinclude
+# Rule to create a debug build in the build/debug/ directory
+.PHONY: debug
+debug:
+	$(MAKE) build_target \
+	BUILD_DIR_NAME=debug \
+	CXXFLAGS="$(BASE_CXXFLAGS) $(DEBUG_FLAGS)"
 
+# --- Internal Build Logic ---
+# This is a generic target that the 'release' and 'debug' rules call.
+# It uses the variables passed down from the rule that called it.
 
-# --- Rules ---
+# Define output directories based on the build type (release or debug)
+BUILD_DIR := build/$(BUILD_DIR_NAME)
+OBJDIR    := $(BUILD_DIR)/obj
+TARGET    := $(BUILD_DIR)/ayM80
+OBJECTS   := $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
 
-# The default 'all' target, which depends on the final executable.
-all: $(TARGET)
+.PHONY: build_target
+build_target: $(TARGET)
 
-# Rule to link the final executable from all the compiled object files.
+# Generic Linking Rule
 $(TARGET): $(OBJECTS)
-	@echo "==> Linking executable..."
-	@mkdir -p $(dir $@)
+	@echo "==> Linking $(BUILD_DIR_NAME) executable..."
+	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(OBJECTS) -o $@ -static-libgcc -static-libstdc++
-	@echo "==> Build finished successfully: $(TARGET)"
+	@echo "✅ Build complete: $(TARGET) is ready."
 
-# Generic rule to compile any .cpp file into its corresponding .o file
-# within the BUILD_DIR, maintaining the source folder structure.
-$(BUILD_DIR)/%.o: %.cpp
-	@echo "==> Compiling $<..."
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDES)
+# Generic Compilation Rule
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(OBJDIR)
+	@echo "==> Compiling $< for $(BUILD_DIR_NAME)..."
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Rule to clean up all build artifacts.
+# Clean Target: Removes the entire build directory.
+.PHONY: clean
 clean:
-	@echo "==> Cleaning build files..."
+	@echo "==> Cleaning all build files..."
 	rm -rf build
-
-# Declare targets that are not actual files.
-.PHONY: all clean

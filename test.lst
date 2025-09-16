@@ -1,0 +1,11 @@
+0000                ; Simple 8080 test program
+0000                ; Adds two numbers and stores the result.
+0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00         org     100h        ; Start at address 0x100
+0100  3e 05         start:  mvi     a, 5        ; Load the first number (5) into the accumulator
+0102  06 0a                 mvi     b, 10       ; Load the second number (10) into register B
+0104  80                    add     b           ; Add register B to the accumulator (A = A + B)
+0105  32 09 01              sta     result      ; Store the accumulator's value at the 'result' address
+0108  76                    hlt                 ; Halt the processor
+0109                ; Data storage area
+0109  00            result: ds      1           ; Reserve 1 byte of storage for the result
+010a                        end                 ; End of the assembly program

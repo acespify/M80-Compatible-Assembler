@@ -23,9 +23,14 @@ public:
     void assemble(const std::vector<std::string>& lines);
     const std::vector<uint8_t>& getOutput() const;
     const std::map<std::string, uint16_t>& getSymbolTable() const;
+    void set_listing_stream(std::ostream& stream);
+    void set_octal_mode(bool enabled);
+    const std::map<std::string, std::vector<int>>& getCrossReferenceData() const;
 
 private:
     // *** State Variables ***
+    std::ostream* listing_stream = nullptr;
+    bool octal_mode = false;
     int lineno;                         // Current line number from the source file.
     uint16_t address;                   // Current memory address (location counter).
     int source_pass;                    // Which pass we are on (1 or 2).
@@ -35,6 +40,7 @@ private:
     std::map<std::string, uint16_t> symbol_table; // Stores all defined labels and their addresses.
     std::map<std::string, Macro> macros;  // Stores all defined macros.
     std::vector<bool> if_stack;         // Manages nested IF/ENDIF conditional blocks.
+    std::map<std::string, std::vector<int>> cross_reference_data; // Map of: {"symbol_name" -> vector of line numbers }
 
     // *** Parsed Tokens ***
     // Member variables to hold the parts of a single parsed line of assembly.

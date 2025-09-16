@@ -1,3 +1,4 @@
+#include "debug.h"
 #include "Assembler.h"
 #include <algorithm>
 #include <sstream>
@@ -15,7 +16,7 @@ void rtrim(std::string &s) { s.erase(std::find_if(s.rbegin(), s.rend(), [](unsig
 void trim(std::string &s) { ltrim(s); rtrim(s); }
 
 // Converts a string to lowercase.
-void to_lower(std::string& s) { std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c){ return std::tolower(c); }); }
+void to_lower(std::string& sVal) { std::transform(sVal.begin(), sVal.end(), sVal.begin(), [](unsigned char c){ return std::tolower(c); }); }
 
 // Splits a string by a delimiter, correctly handling nested quotes and angle brackets.
 std::vector<std::string> split_args(const std::string& s, char delimiter) {
@@ -41,6 +42,14 @@ std::vector<std::string> split_args(const std::string& s, char delimiter) {
     return tokens;
 }
 
+void Assembler::set_listing_stream(std::ostream& stream) {
+    listing_stream = &stream;
+}
+
+void Assembler::set_octal_mode(bool enabled){
+    this->octal_mode = enabled;
+}
+
 // --- Assembler Class Implementation ---
 // Constructor: Initializes the mnemonic handler map.
 Assembler::Assembler() { initialize_mnemonic_handlers(); reset_state(); }
@@ -50,6 +59,7 @@ void Assembler::reset_state() { lineno = 0; address = 0; source_pass = 1; assemb
 // Public gettters for the final output.
 const std::vector<uint8_t>& Assembler::getOutput() const { return output; }
 const std::map<std::string, uint16_t>& Assembler::getSymbolTable() const { return symbol_table; }
+const std::map<std::string, std::vector<int>>& Assembler::getCrossReferenceData() const { return cross_reference_data; }
 
 // Reports an error message to the console and exits the program.
 void Assembler::report_error(const std::string& message, int line_num) const { std::cerr << "asm80> line " << (line_num + 1) << ": " << message << std::endl; exit(1); }
@@ -62,7 +72,7 @@ void Assembler::assemble(const std::vector<std::string>& lines) {
     // Pass 1: Build the symbol table.
     source_pass = 1;
     do_pass(lines);
-    / Pass 2: Generate the machine code.
+    // Pass 2: Generate the machine code.
     source_pass = 2;
     address = 0;
     output.clear();
@@ -109,9 +119,14 @@ void Assembler::do_pass(const std::vector<std::string>& lines) {
     for (lineno = 0; lineno < lines.size(); ++lineno) {
         if (assembly_finished) break;
         std::string current_line = lines[lineno];
+
+        // Updating for listing file logic
+        uint16_t line_address = this->address;
+        size_t bytes_before = this->output.size();
+
         std::string temp_line = current_line;
         trim(temp_line);
-        if (temp_line.empty()) continue;
+        if (temp_line.empty()) { if (source_pass == 2 && listing_stream) { *listing_stream << current_line << std::endl;} continue;} 
         std::stringstream ss(temp_line);
         std::string first_word, second_word;
         ss >> first_word >> second_word;
@@ -125,6 +140,31 @@ void Assembler::do_pass(const std::vector<std::string>& lines) {
             continue;
         }
         expand_and_process_line(current_line, lineno);
+
+        // Listing File Logic
+        if (source_pass == 2 && listing_stream) {
+            size_t bytes_after = this->output.size();
+            std::stringstream line_data_stream;
+
+            // Selecting Hex or Octor formatting
+            if (this->octal_mode) {
+                // format address and bytes in OCTAL
+                line_data_stream << std::oct << std::setfill('0') << std::setw(6) << line_address << "  ";
+                for (size_t i = bytes_before; i < bytes_after; ++i) {
+                    line_data_stream << std:: setw(3) << static_cast<int>(output[i]) << " ";
+                }
+            } else {
+                // Formatting address and bytes in HEXADECIMAL (default)
+                line_data_stream << std::hex << std::uppercase << std::setfill('0') << std::setw(4) << line_address << "  ";
+                for (size_t i = bytes_before; i < bytes_after; ++i) {
+                    line_data_stream << std::setw(2) << static_cast<int>(output[i]) << " ";
+                }
+            }
+
+            
+            // Write the final formatted line to the listing file
+            *listing_stream << std::left << std::setw(20) << line_data_stream.str() << current_line << std::endl;
+        }
     }
     if (!if_stack.empty()) report_error("IF block not closed with ENDIF", lines.size());
 }
@@ -276,7 +316,7 @@ void Assembler::pass_action(int instruction_size, const std::vector<uint8_t>& ou
 }
 
 // Adds a label and its current address to the symbol table.
-void Assembler::add_label() { if (symbol_table.count(label)) { report_error("duplicate label: \"" + label + "\"", this->lineno); } symbol_table[label] = address; }
+void Assembler::add_label() { if (symbol_table.count(label)) { report_error("duplicate label: \"" + label + "\"", this->lineno); } symbol_table[label] = address; cross_reference_data[label].push_back(-(this->lineno + 1));}
 
 // Checks for the correct number of operands and reports an error if invalid.
 void Assembler::check_operands(bool valid, const std::string& mnemonic_name) { if (!valid) { report_error("invalid operands for mnemonic \"" + mnemonic_name + "\"", this->lineno); } }
@@ -298,7 +338,7 @@ int Assembler::parse_expr_factor(std::string::const_iterator& it, std::string::c
 int Assembler::parse_expr_term(std::string::const_iterator& it, std::string::const_iterator end) { int result = parse_expr_factor(it, end); while (true) { auto current_pos = it; std::string op = get_token(it, end); to_lower(op); if (op != "*" && op != "/" && op != "and") { it = current_pos; break; } int rhs = parse_expr_factor(it, end); if (op == "*") result *= rhs; else if (op == "/") result /= rhs; else if (op == "and") result &= rhs; } return result; }
 int Assembler::evaluate_expression(std::string::const_iterator& it, std::string::const_iterator end) { int result = parse_expr_term(it, end); while (true) { auto current_pos = it; std::string op = get_token(it, end); to_lower(op); if (op != "+" && op != "-" && op != "or" && op != "xor") { it = current_pos; break; } int rhs = parse_expr_term(it, end); if (op == "+") result += rhs; else if (op == "-") result -= rhs; else if (op == "or") result |= rhs; else if (op == "xor") result ^= rhs; } return result; }
 int Assembler::evaluate_expression(const std::string& expr) { auto it = expr.begin(); auto end = expr.end(); return evaluate_expression(it, end); }
-int Assembler::evaluate_single_term(const std::string& term_str) { std::string term = term_str; trim(term); if (term.empty()) return 0; if (is_char_constant(term)) { return static_cast<uint8_t>(term[1]); } to_lower(term); if (term == "$") return this->address; if (term.rfind("low ", 0) == 0) { std::string label = term.substr(4); trim(label); if (symbol_table.count(label)) return symbol_table.at(label) & 0xFF; if (source_pass == 2) report_error("undefined label in LOW operator: " + label, this->lineno); return 0; } if (term.rfind("high ", 0) == 0) { std::string label = term.substr(5); trim(label); if (symbol_table.count(label)) return (symbol_table.at(label) >> 8) & 0xFF; if (source_pass == 2) report_error("undefined label in HIGH operator: " + label, this->lineno); return 0; } if (isdigit(term[0]) || (term.length() > 1 && term[0] == '-')) { return get_number(term); } if (symbol_table.count(term)) { return symbol_table.at(term); } if (source_pass == 2) { report_error("undefined label in expression: " + term, this->lineno); } return 0; }
+int Assembler::evaluate_single_term(const std::string& term_str) { std::string term = term_str; trim(term); if (term.empty()) return 0; if (is_char_constant(term)) { return static_cast<uint8_t>(term[1]); } to_lower(term); if (term == "$") return this->address; if (term.rfind("low ", 0) == 0) { std::string label = term.substr(4); trim(label); if (symbol_table.count(label)) return symbol_table.at(label) & 0xFF; if (source_pass == 2) report_error("undefined label in LOW operator: " + label, this->lineno); return 0; } if (term.rfind("high ", 0) == 0) { std::string label = term.substr(5); trim(label); if (symbol_table.count(label)) return (symbol_table.at(label) >> 8) & 0xFF; if (source_pass == 2) report_error("undefined label in HIGH operator: " + label, this->lineno); return 0; } if (isdigit(term[0]) || (term.length() > 1 && term[0] == '-')) { return get_number(term); } if (symbol_table.count(term)) { cross_reference_data[term].push_back(this->lineno + 1); return symbol_table.at(term); } if (source_pass == 2) { report_error("undefined label in expression: " + term, this->lineno); } return 0; }
 bool Assembler::is_quote_delimited(const std::string& s) const { if (s.length() < 2) return false; char first = s.front(); char last = s.back(); return (first == '"' && last == '"') || (first == '\'' && last == '\''); }
 bool Assembler::is_char_constant(const std::string& s) const { return s.length() == 3 && s.front() == '\'' && s.back() == '\''; }
 
