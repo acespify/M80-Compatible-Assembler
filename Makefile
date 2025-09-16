@@ -53,7 +53,7 @@ $(TARGET): $(OBJECTS)
 	@echo "==> Linking $(BUILD_DIR_NAME) executable..."
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(OBJECTS) -o $@ -static-libgcc -static-libstdc++
-	@echo "✅ Build complete: $(TARGET) is ready."
+	@echo "Build complete: $(TARGET) is ready."
 
 # Generic Compilation Rule
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
